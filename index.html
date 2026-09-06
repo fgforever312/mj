@@ -82,15 +82,17 @@ body{
 .tre.pulse{animation:trePulse .8s;}
 @keyframes trePulse{0%{text-shadow:0 0 14px var(--yellow), 0 0 4px var(--yellow);} 100%{text-shadow:none;}}
 
-/* toast：底部浮层（纯提示自消；带动作键=模式切换等非阻塞确认）*/
+/* toast：底部浮层（纯提示自消；带动作键=模式切换等非阻塞确认）
+   2026-09-06：消息独占整行、动作键换行右对齐——旧版 .tmsg{flex:1}（basis=0）让
+   消息对弹框宽度贡献 0，收缩后消息被挤成 ~40px 竖条（移动端一字一行）。*/
 #toast{position:fixed; left:50%; transform:translate(-50%,16px); bottom:calc(18px + env(safe-area-inset-bottom));
-  z-index:40; display:flex; align-items:center; gap:10px; max-width:92vw;
+  z-index:40; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:10px; max-width:92vw;
   padding:11px 14px; border-radius:14px; font-size:14px; color:var(--label);
   background:rgba(44,44,46,.94); border:1px solid rgba(255,255,255,.12);
   -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 6px 24px rgba(0,0,0,.5);
   opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;}
 #toast.show{opacity:1; transform:translate(-50%,0); pointer-events:auto;}
-#toast .tmsg{flex:1; min-width:0;}
+#toast .tmsg{flex:1 1 100%; min-width:0;}
 #toast button{appearance:none; border:1px solid var(--sep); border-radius:9px; background:var(--card2);
   color:var(--label); padding:7px 13px; font-size:13px; font-weight:600; cursor:pointer; flex:none;}
 #toast button.pri{background:var(--blue); border-color:transparent; color:#fff;}
@@ -190,7 +192,7 @@ body{
     <button id="md-manual" onclick="switchMode(false)">手工</button>
     <button id="md-script" onclick="switchMode(true)">剧本</button>
   </div>
-  <label class="switch"><input type="checkbox" id="animsw" checked onchange="lsSet('xddq_anim2',this.checked?'1':'0')"><span class="slider"></span></label>
+  <label class="switch"><input type="checkbox" id="animsw" onchange="lsSet('xddq_anim2',this.checked?'1':'0')"><span class="slider"></span></label>
   <span class="sub">动画</span>
   <label class="switch"><input type="checkbox" id="hint" checked><span class="slider"></span></label>
   <span class="sub">建议</span>
@@ -255,12 +257,12 @@ init()
 `);
     const hs=JSON.parse(py.globals.get("has_script")());
     HAS_SCRIPT=hs.script;
-    S=JSON.parse(py.globals.get("new_session")());
-    MODE=HAS_SCRIPT;      // 打包内有剧本 → 默认剧本模式（引擎代掷·你只做决策）
+    S=JSON.parse(py.globals.get("new_session")(50, false));
+    MODE=false;           // 默认手工模式（2026-09-06 用户改默认；剧本可随时切换）
     document.getElementById("overlay").style.display="none";
     setModeUI();
-    const a2=lsGet("xddq_anim2");   // 旧三档键 xddq_anim（≥2=关）迁移到新开关键
-    document.getElementById("animsw").checked=a2!==null?a2==="1":!(+lsGet("xddq_anim")>=2);
+    const a2=lsGet("xddq_anim2");   // 动画默认关（2026-09-06 用户改默认）；显式开过才开
+    document.getElementById("animsw").checked=a2==="1";
     render();
   }catch(e){console.error(e);fatal(e);}
 }
